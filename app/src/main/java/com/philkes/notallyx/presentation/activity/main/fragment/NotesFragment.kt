@@ -311,17 +311,26 @@ abstract class NotesFragment : Fragment(), ItemListener {
     protected open fun onNotesSubmitted(items: List<Item>) {}
 
     private fun setupObserver() {
+        var lastSubmittedList: List<Item>? = null
+        var currentAppliedSort = model.preferences.notesSorting.value
+
         viewLifecycleOwner.repeatOnLifecycleScope {
             launch {
                 getFlow().collect { list ->
-                    notesAdapter?.submitList(list)
-                    onNotesSubmitted(list)
+                    if (list != lastSubmittedList) {
+                        lastSubmittedList = list
+                        notesAdapter?.submitList(list)
+                        onNotesSubmitted(list)
+                    }
                     binding?.ImageView?.isVisible = list.isEmpty()
                 }
             }
             launch {
                 model.preferences.notesSorting.flow.collect { notesSort ->
-                    notesAdapter?.setNotesSort(notesSort)
+                    if (notesSort != currentAppliedSort) {
+                        currentAppliedSort = notesSort
+                        notesAdapter?.setNotesSort(notesSort)
+                    }
                 }
             }
             launch {
